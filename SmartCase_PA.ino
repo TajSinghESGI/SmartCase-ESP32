@@ -9,8 +9,8 @@ const int MPU_ADDR = 0x68; // adresse I2C du MPU.
 int16_t accelerometer_x, accelerometer_y, accelerometer_z; // variables pour l'acceloremetre
 int16_t gyro_x, gyro_y, gyro_z; // variable pour le gyro 
 
-const char* ssid = "";
-const char* password = ""; //TODO - Voir pour pouvoir se connecter directement depuis le tel ? 
+const char* ssid = "AndroidTaj";
+const char* password = "TajSingh"; //TODO - Voir pour pouvoir se connecter directement depuis le tel ? 
 
 void setup() {
   Serial.begin(9600);
@@ -37,6 +37,8 @@ void setup() {
   
 }
 void loop() {
+  
+  //Logique accéleromètre 
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x3B); //Envoi de données vers la carte maitre
   Wire.endTransmission(false);
@@ -65,6 +67,12 @@ void loop() {
   Serial.print(" | gY = "); Serial.print(gyro_y);
   Serial.print(" | gZ = "); Serial.print(gyro_z);
   Serial.println();
+
+  //Logique puissance du WiFi
+  long rssi = WiFi.RSSI();
+  
+  Serial.print("Puissance du WiFi: ");
+  Serial.println(rssi);
   
   // delay
   delay(5000);
