@@ -2,6 +2,7 @@
 
 #include "Wire.h" // Librairie pour les periphs I2C
 #include <WiFi.h> //Librairie pour le Wifi
+#include <WiFiManager.h>
 
 const int MPU_ADDR = 0x68; // adresse I2C du MPU.
 
@@ -9,8 +10,13 @@ const int MPU_ADDR = 0x68; // adresse I2C du MPU.
 int16_t accelerometer_x, accelerometer_y, accelerometer_z; // variables pour l'acceloremetre
 int16_t gyro_x, gyro_y, gyro_z; // variable pour le gyro 
 
-const char* ssid = "AndroidTaj";
-const char* password = "TajSingh"; //TODO - Voir pour pouvoir se connecter directement depuis le tel ? 
+/*const char* ssidPhone = "AndroidTaj";
+const char* passwordPhone = "";*/
+
+WiFiManager wm;
+
+const char* ssid = "SmartCase-WiFi";
+const char* password = "SmartCase"; //TODO - Voir pour pouvoir se connecter directement depuis le tel ? - Fait !
 
 void setup() {
   Serial.begin(9600);
@@ -21,7 +27,7 @@ void setup() {
   Wire.endTransmission(true);
 
   //Connexion au wifi
-  WiFi.begin(ssid, password);
+ /*WiFi.begin(ssidPhone, passwordPhone);
   Serial.print("Je me connecte...");
   
   while(WiFi.status() != WL_CONNECTED)
@@ -33,7 +39,22 @@ void setup() {
   Serial.println("\n");
   Serial.println("Connexion etablie!");
   Serial.print("Adresse IP: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(WiFi.localIP());*/
+
+  /*Serial.println();
+  Serial.print("Configuring access point...");
+  // You can remove the password parameter if you want the AP to be open. 
+  WiFi.softAP(ssid, password);
+
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);*/
+
+  WiFi.mode(WIFI_STA);
+  if(!wm.autoConnect(ssid, password))
+    Serial.println("Erreur de connexion.");
+  else
+    Serial.println("Connexion etablie!");
   
 }
 void loop() {
@@ -63,10 +84,10 @@ void loop() {
 
   Serial.println();
   
-  Serial.print("gX = "); Serial.print(gyro_x);
+  /*Serial.print("gX = "); Serial.print(gyro_x);
   Serial.print(" | gY = "); Serial.print(gyro_y);
   Serial.print(" | gZ = "); Serial.print(gyro_z);
-  Serial.println();
+  Serial.println();*/
 
   //Logique puissance du WiFi
   long rssi = WiFi.RSSI();
