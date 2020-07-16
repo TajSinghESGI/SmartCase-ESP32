@@ -12,8 +12,10 @@
 #define mdp "bluecase"
 #define wifi_topic "WIFI/pa"
 #define topic_lastWill "WIFI/death"
-#define port 15013
-#define client_id "fbc0dccd3aaa47a0b775dbff28ff3638"
+#define topic_poids "POIDS/pa"
+#define topic_poids_flutter "POIDS/pa/flutter"
+#define port 17606
+#define client_id "8ca1f20ac3564e73a6b3f836b235d505"
 
 const int MPU_ADDR = 0x68; // adresse I2C du MPU.
 
@@ -24,6 +26,13 @@ int16_t gyro_x, gyro_y, gyro_z; // variable pour le gyro
 //Permet de stocker les nouveaux ssid et password depuis la lib wifimanager.
 char new_ssid[50]; 
 char new_password[50];
+
+float randNumber = 0.0;
+float poidFixe = 7.0;
+
+char message_buff[100];
+long lastMsg = 0;   //Horodatage du dernier message publié sur MQTT
+long lastRecu = 0;
 
 WiFiManager wm;
 WiFiClient espClient;
@@ -56,6 +65,7 @@ void reconnect() {
     Serial.print("Connexion au serveur MQTT...");
     if (client.connect(client_id, user, mdp, topic_lastWill, 0, false, "Je suis mort")) {
       Serial.println("OK");
+      client.subscribe(topic_poids_flutter);                                                      //Logique accéleromètre 
     } else {
       client.setKeepAlive(5);
       Serial.print("KO, erreur : ");
@@ -85,8 +95,9 @@ void setup() {
   
   client.setServer(mqtt_server, port);    //Configuration de la connexion au serveur MQTT
   client.setKeepAlive(5);
+  client.setCallback(callback);  //La fonction de callback qui est executée à chaque réception de message   
   //Serial.println(wm.getWiFiPass());
-  //Serial.println(wm.getWiFiSSID()); 
+  //Serial.println(wm.getWiFiSSID());
 }
 
 void loop() {
@@ -96,7 +107,11 @@ void loop() {
   }
   
   client.loop();
-  //Logique accéleromètre 
+  long now = millis();
+  if (now - lastRecu > 100 ) {
+    lastRecu = now;
+    client.subscribe(topic_poids_flutter);                                                      //Logique accéleromètre 
+  }
   /*
    *Wire.beginTransmission(MPU_ADDR);
     Wire.write(0x3B); //Envoi de données vers la carte maitre
@@ -125,17 +140,42 @@ void loop() {
     Serial.println();
   */
   
-  //Logique puissance du WiFi
+                                                          //Logique puissance du WiFi
   long rssi = WiFi.RSSI();
   char cstr[16];
   
-  Serial.print("Puissance du WiFi: ");
-  Serial.println(rssi);
+  //Serial.print("Puissance du WiFi: ");
+  //Serial.println(rssi);
 
-  Serial.println(String(rssi).c_str());
+  //Serial.println(String(rssi).c_str());
   
-  client.publish(wifi_topic, String(rssi).c_str(), false);
-
+  client.publish(wifi_topic, String(rssi).c_str(), false);                                                      
+ 
   // delay
   delay(2000);
+}
+
+void callback(char* topic, byte* payload, unsigned int length) {
+
+  int i = 0;
+  String msgString = "";
+  String oldMsg = "";
+
+  randNumber = random(0, 99);
+  poidFixe = poidFixe + randNumber*0.01;
+  Serial.print("POIDS: ");
+  Serial.println(poidFixe);
+    
+  // create character buffer with ending null terminator (string)
+  for(i=0; i<length; i++) {
+    message_buff[i] = payload[i];
+  }
+  message_buff[i] = '\0';
+  
+  msgString = String(message_buff);
+  Serial.println("Payload: " + msgString);
+  if ( msgString == "ON" ) {
+    client.publish(topic_poids, String(poidFixe).c_str(), false);
+  }
+  poidFixe = 7.0;
 }
